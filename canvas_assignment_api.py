@@ -41,6 +41,8 @@ class CanvasApiAssignments:
         is invalid.
         '''
 
+        # URL specifically for Canvas used by UCI students.
+        # This will need to be changed for different schools.
         BASE_URL = "https://canvas.eee.uci.edu/api/graphql"
 
         query = '''
