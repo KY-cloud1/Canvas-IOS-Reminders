@@ -49,7 +49,6 @@ class CanvasApiAssignments:
                 name
                 assignmentsConnection(first: 100) {
                     nodes {
-                        _id
                         name
                         dueAt
                     }
@@ -101,7 +100,7 @@ class CanvasApiAssignments:
             return None
         
 
-    def parse_assignments_due(self, assignments: dict) -> list[dict]:
+    def parse_assignments_due(self, assignments: dict) -> str:
         '''
         Parses given assignments by only selecting the ones that have
         a due date on or after the current day and no later than the
@@ -109,7 +108,7 @@ class CanvasApiAssignments:
         
         assignments represents the data received from the Canvas API.
 
-        Returns a list of dict containing only assignments that have 
+        Returns a JSON string containing only assignments that have
         due dates on or after the current day.
         '''
 
@@ -142,7 +141,9 @@ class CanvasApiAssignments:
                         "dueAt": assignment_due_date
                         })
 
-        return due_assignments
+        assignments_json_str = json.dumps(due_assignments, indent= 2)
+
+        return assignments_json_str
 
 
 def run():
