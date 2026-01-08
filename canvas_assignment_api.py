@@ -14,9 +14,15 @@ import urllib.request
 # Canvas API Access Token goes here in the quotes.
 TOKEN = ""
 
+
 # URL specifically for Canvas used by UCI students.
 # This will need to be changed for different schools.
 BASE_URL = "https://canvas.eee.uci.edu/api/graphql"
+
+
+# Represents the number of weeks in the future to consider
+# for assignments with due dates.
+WEEKS_DELTA = 2
 
 
 class CanvasApiAssignments:
@@ -158,10 +164,6 @@ def run():
     Gets upcoming assignments from a user's UCI Canvas using their
     token and prints it into the console.
     '''
-
-    # Represents the number of weeks in the future to consider
-    # for assignments with due dates.
-    WEEKS_DELTA = 2
 
     # TOKEN is currently hardcoded at top of program.
     canvas_api = CanvasApiAssignments(TOKEN)
