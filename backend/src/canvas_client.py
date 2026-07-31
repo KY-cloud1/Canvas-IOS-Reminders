@@ -12,7 +12,6 @@ import urllib.request
 
 from config import CANVAS_GRAPHQL_URL, CANVAS_TOKEN
 
-
 # Represents the number of weeks in the future to consider
 # for assignments with due dates.
 WEEKS_DELTA = 2

@@ -11,8 +11,6 @@ from datetime import UTC, datetime
 
 import ngrok
 import uvicorn
-from fastapi import APIRouter, BackgroundTasks, FastAPI
-
 from canvas_client import CanvasApi, filter_canvas_assignments
 from config import (
     CANVAS_ENABLED,
@@ -25,8 +23,8 @@ from config import (
     NGROK_DOMAIN,
     NGROK_ENABLED,
 )
+from fastapi import APIRouter, BackgroundTasks, FastAPI
 from gradescope_client import GradescopeAutomation, filter_gradescope_assignments
-
 
 # The port that the local server will run on.
 PORT = 8081

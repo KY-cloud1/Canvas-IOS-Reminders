@@ -8,6 +8,7 @@ Gradescope using browser automation.
 import datetime
 import os
 
+from config import GRADESCOPE_EMAIL, GRADESCOPE_PASSWORD
 from playwright.sync_api import (
     Browser,
     BrowserContext,
@@ -18,9 +19,6 @@ from playwright.sync_api import (
 from playwright.sync_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
-
-from config import GRADESCOPE_EMAIL, GRADESCOPE_PASSWORD
-
 
 # Absolute path to this python module's file directory.
 FILE_DIRECTORY = os.path.dirname(os.path.abspath(__file__))

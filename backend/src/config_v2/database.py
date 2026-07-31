@@ -9,7 +9,6 @@ retrieving, updating, and deleting configuration values.
 import sqlite3
 from pathlib import Path
 
-
 # Filepath to the settings file.
 DB_PATH = Path("settings.db")
 
