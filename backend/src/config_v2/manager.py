@@ -21,12 +21,15 @@ class SettingsManager:
     @classmethod
     def load(cls) -> None:
         """
-        Load application settings from persistent storage.
+        Initialize the database and load application settings.
 
-        Configuration values are retrieved from the database and secret
-        store, converted to their appropriate types, and cached in
-        memory.
+        Ensures the database is initialized, then retrieves
+        configuration values from the database and secret store,
+        converts them to their appropriate types, and caches them
+        in memory.
         """
+        Database.initialize()
+
         cls._settings = Settings(
             canvas_enabled=Database.get("canvas_enabled") == "true",
             canvas_graphql_url=Database.get("canvas_graphql_url") or "",
@@ -61,11 +64,14 @@ class SettingsManager:
     @classmethod
     def save(cls, settings: Settings) -> None:
         """
-        Persist application settings and update the in-memory cache.
+        Initialize the database, persist application settings, and
+        update the in-memory cache.
 
         Args:
             settings: The settings instance to save.
         """
+        Database.initialize()
+
         Database.set("canvas_enabled", str(settings.canvas_enabled).lower())
         Database.set("canvas_graphql_url", settings.canvas_graphql_url)
         Database.set("gradescope_enabled", str(settings.gradescope_enabled).lower())
