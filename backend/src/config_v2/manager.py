@@ -6,6 +6,12 @@ from config_v2.database import Database
 from config_v2.secrets import SecretStore
 from config_v2.settings import Settings
 
+# Default 3600 seconds for 60 minute refresh interval.
+DEFAULT_REFRESH_INTERVAL = 3600
+
+# Default 10 weeks for quarter-long weeks delta.
+DEFAULT_WEEKS_DELTA = 10
+
 
 class SettingsManager:
     """
@@ -37,8 +43,10 @@ class SettingsManager:
             gradescope_enabled=Database.get("gradescope_enabled") == "true",
             gradescope_email=SecretStore.get("gradescope_email"),
             gradescope_password=SecretStore.get("gradescope_password"),
-            refresh_interval=int(Database.get("refresh_interval") or 0),
-            weeks_delta=int(Database.get("weeks_delta") or 0),
+            refresh_interval=int(
+                Database.get("refresh_interval") or DEFAULT_REFRESH_INTERVAL
+            ),
+            weeks_delta=int(Database.get("weeks_delta") or DEFAULT_WEEKS_DELTA),
             ngrok_enabled=Database.get("ngrok_enabled") == "true",
             ngrok_domain=Database.get("ngrok_domain") or "",
             ngrok_authtoken=SecretStore.get("ngrok_authtoken"),
