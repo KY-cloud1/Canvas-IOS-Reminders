@@ -23,6 +23,7 @@ from config import (
     NGROK_DOMAIN,
     NGROK_ENABLED,
 )
+from config_v2 import SettingsManager
 from fastapi import APIRouter, BackgroundTasks, FastAPI
 from gradescope_client import GradescopeAutomation, filter_gradescope_assignments
 
@@ -202,6 +203,44 @@ def get_config() -> dict[str, object]:
         "ngrok": {
             "enabled": NGROK_ENABLED,
             "configured": bool(NGROK_DOMAIN and NGROK_AUTHTOKEN),
+        },
+    }
+
+
+@api.get("/settings")
+def get_settings() -> dict[str, object]:
+    """
+    Returns the server's current runtime settings.
+
+    The function retrieves the active application settings and returns
+    configurable values along with the enabled/configured status of
+    supported integrations. Sensitive values such as passwords and
+    authentication tokens are not exposed.
+
+    Returns:
+        dict: Runtime settings including refresh interval, assignment
+            filtering window, and configuration information for
+            Canvas, Gradescope, and ngrok.
+    """
+    settings = SettingsManager.get()
+
+    return {
+        "refresh_interval": settings.refresh_interval,
+        "weeks_delta": settings.weeks_delta,
+        "canvas": {
+            "enabled": settings.canvas_enabled,
+            "graphql_url": settings.canvas_graphql_url,
+            "token_configured": settings.canvas_token is not None,
+        },
+        "gradescope": {
+            "enabled": settings.gradescope_enabled,
+            "email": settings.gradescope_email,
+            "password_configured": settings.gradescope_password is not None,
+        },
+        "ngrok": {
+            "enabled": settings.ngrok_enabled,
+            "domain": settings.ngrok_domain,
+            "authtoken_configured": settings.ngrok_authtoken is not None,
         },
     }
 
