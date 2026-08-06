@@ -10,7 +10,7 @@ import sqlite3
 from pathlib import Path
 
 # Filepath to the settings file.
-DB_PATH = Path("settings.db")
+DB_PATH = Path(__file__).resolve().parent / "settings.db"
 
 
 # Default settings used upon initialization.
