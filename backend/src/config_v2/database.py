@@ -116,7 +116,7 @@ class Database:
         cls._conn.commit()
 
     @classmethod
-    def get(cls, key: str) -> str | None:
+    def get(cls, key: str) -> str:
         """
         Retrieve a stored configuration value.
 
@@ -124,11 +124,11 @@ class Database:
             key: The unique identifier for the setting.
 
         Returns:
-            The stored value associated with the key, or None if the key
-            does not exist.
+            The stored value associated with the key.
 
         Raises:
             RuntimeError: If the database has not been initialized.
+            KeyError: If no setting exists for the specified key.
         """
         if cls._conn is None:
             raise RuntimeError("Database has not been initialized.")
@@ -139,7 +139,7 @@ class Database:
         ).fetchone()
 
         if row is None:
-            return None
+            raise KeyError(f"Setting {key!r} does not exist.")
 
         return row["value"]
 
