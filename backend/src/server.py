@@ -7,6 +7,7 @@ as a JSON API using Uvicorn.
 
 import asyncio
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import ngrok
@@ -26,6 +27,7 @@ from config import (
 from config_v2 import SettingsManager
 from fastapi import APIRouter, BackgroundTasks, FastAPI
 from gradescope_client import GradescopeAutomation, filter_gradescope_assignments
+from settings import SettingsUpdate
 
 # The port that the local server will run on.
 PORT = 8081
@@ -243,6 +245,20 @@ def get_settings() -> dict[str, object]:
             "authtoken_configured": settings.ngrok_authtoken is not None,
         },
     }
+
+
+@api.post("/settings")
+def set_settings(new_settings: SettingsUpdate) -> dict[str, str]:
+    """
+    Docstring
+    """
+    settings = SettingsManager.get()
+
+    updated_settings = replace(settings, **new_settings.model_dump(exclude_unset=True))
+
+    SettingsManager.save(updated_settings)
+
+    return {"status": "ok"}
 
 
 @api.get("/assignments")
