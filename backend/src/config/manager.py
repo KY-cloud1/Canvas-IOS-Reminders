@@ -2,9 +2,9 @@
 Utilities for loading, accessing, and persisting application settings.
 """
 
-from config_v2.database import Database
-from config_v2.secrets import SecretStore
-from config_v2.settings import Settings
+from config.database import Database
+from config.secrets import SecretStore
+from config.settings import Settings
 
 
 class SettingsManager:

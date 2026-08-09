@@ -10,11 +10,7 @@ import json
 import urllib.error
 import urllib.request
 
-from config import CANVAS_GRAPHQL_URL, CANVAS_TOKEN
-
-# Represents the number of weeks in the future to consider
-# for assignments with due dates.
-WEEKS_DELTA = 2
+from config import SettingsManager
 
 
 class CanvasApi:
@@ -175,9 +171,24 @@ def run():
     Retrieves upcoming assignments, filters them, and prints due
     assignments to the console.
     """
-    canvas_api = CanvasApi(CANVAS_GRAPHQL_URL, CANVAS_TOKEN)
+    settings = SettingsManager.get()
+
+    if not settings.canvas_graphql_url:
+        raise ValueError("Canvas GraphQL URL is not configured.")
+
+    if not settings.canvas_token:
+        raise ValueError("Canvas token is not configured.")
+
+    if not settings.weeks_delta:
+        raise ValueError("Weeks delta is not configured.")
+
+    canvas_graphql_url = settings.canvas_graphql_url
+    canvas_token = settings.canvas_token
+    weeks_delta = settings.weeks_delta
+
+    canvas_api = CanvasApi(canvas_graphql_url, canvas_token)
     assignments = canvas_api.get_all_assignments()
-    sorted_assignments = filter_canvas_assignments(assignments, WEEKS_DELTA)
+    sorted_assignments = filter_canvas_assignments(assignments, weeks_delta)
 
     print(sorted_assignments)
 

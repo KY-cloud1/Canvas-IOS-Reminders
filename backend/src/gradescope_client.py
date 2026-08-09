@@ -8,7 +8,7 @@ Gradescope using browser automation.
 import datetime
 import os
 
-from config import GRADESCOPE_EMAIL, GRADESCOPE_PASSWORD
+from config import SettingsManager
 from playwright.sync_api import (
     Browser,
     BrowserContext,
@@ -28,10 +28,6 @@ FILE_PATH = os.path.join(FILE_DIRECTORY, "auth.json")
 
 # Gradescope course dashboard URL.
 COURSE_DASHBOARD_URL = "https://www.gradescope.com/"
-
-# This constant represents the number of weeks in the future to
-# consider for assignments with due dates.
-WEEKS_DELTA = 2
 
 # Amount of time to wait during login validation.
 LOGIN_TIMEOUT_MS = 5_000
@@ -357,12 +353,27 @@ def run():
     Retrieves upcoming assignments, filters them, and prints due
     assignments to the console.
     """
-    client = GradescopeAutomation(GRADESCOPE_EMAIL, GRADESCOPE_PASSWORD, False)
+    settings = SettingsManager.get()
+
+    if not settings.gradescope_email:
+        raise ValueError("Gradescope email is not configured.")
+
+    if not settings.gradescope_password:
+        raise ValueError("Gradescope password is not configured.")
+
+    if not settings.weeks_delta:
+        raise ValueError("Weeks delta is not configured.")
+
+    gradescope_email = settings.gradescope_email
+    gradescope_password = settings.gradescope_password
+    weeks_delta = settings.weeks_delta
+
+    client = GradescopeAutomation(gradescope_email, gradescope_password, False)
 
     try:
         all_assignments = client.get_all_assignments()
         filtered_assignments = filter_gradescope_assignments(
-            all_assignments, WEEKS_DELTA
+            all_assignments, weeks_delta
         )
 
         print(filtered_assignments)

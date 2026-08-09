@@ -13,31 +13,13 @@ from datetime import UTC, datetime
 import ngrok
 import uvicorn
 from canvas_client import CanvasApi, filter_canvas_assignments
-from config import (
-    CANVAS_ENABLED,
-    CANVAS_GRAPHQL_URL,
-    CANVAS_TOKEN,
-    GRADESCOPE_EMAIL,
-    GRADESCOPE_ENABLED,
-    GRADESCOPE_PASSWORD,
-    NGROK_AUTHTOKEN,
-    NGROK_DOMAIN,
-    NGROK_ENABLED,
-)
-from config_v2 import SettingsManager
+from config import SettingsManager
 from fastapi import APIRouter, BackgroundTasks, FastAPI
 from gradescope_client import GradescopeAutomation, filter_gradescope_assignments
 from settings import SettingsUpdate
 
 # The port that the local server will run on.
 PORT = 8081
-
-# The number of weeks in the future to consider for assignments with
-# due dates.
-WEEKS_DELTA = 2
-
-# The amount of time in between fetching refreshes.
-REFRESH_INTERVAL_SECONDS = 3600
 
 
 @asynccontextmanager
@@ -54,11 +36,19 @@ async def lifespan(app: FastAPI):
         app: The FastAPI application instance.
     """
     # Startup logic
+    settings = SettingsManager.get()
+
     await refresh_once()  # Fill cache once before continuing startup.
     task = asyncio.create_task(refresh_assignments())
 
-    if NGROK_ENABLED:
-        listener = ngrok.forward(PORT, authtoken=NGROK_AUTHTOKEN, domain=NGROK_DOMAIN)
+    if settings.ngrok_enabled:
+        if settings.ngrok_domain and settings.ngrok_authtoken:
+            listener = ngrok.forward(
+                PORT, authtoken=settings.ngrok_authtoken, domain=settings.ngrok_domain
+            )
+        else:
+            print("ngrok is enabled but credentials are not configured.")
+            listener = None
     else:
         listener = None
 
@@ -97,33 +87,41 @@ def fetch_assignments() -> list[dict]:
         list[dict]: A list of dictionaries representing upcoming
             assignments.
     """
+    settings = SettingsManager.get()
+
     due_assignments = []
 
-    # Handle assignments from Canvas if configured.
-    if CANVAS_ENABLED:
-        canvas_api = CanvasApi(CANVAS_GRAPHQL_URL, CANVAS_TOKEN)
-        canvas_assignments = canvas_api.get_all_assignments()
-        filtered_canvas_assignments = filter_canvas_assignments(
-            canvas_assignments, WEEKS_DELTA
-        )
-
-        due_assignments.extend(filtered_canvas_assignments)
-
-    # Handle assignments from Gradescope if configured.
-    if GRADESCOPE_ENABLED:
-        gradescope_automation = GradescopeAutomation(
-            GRADESCOPE_EMAIL, GRADESCOPE_PASSWORD
-        )
-
-        try:
-            gradescope_assignments = gradescope_automation.get_all_assignments()
-            filtered_gradescope_assignments = filter_gradescope_assignments(
-                gradescope_assignments, WEEKS_DELTA
+    # Handle assignments from Canvas if enabled and configured.
+    if settings.canvas_enabled:
+        if settings.canvas_graphql_url and settings.canvas_token:
+            canvas_api = CanvasApi(settings.canvas_graphql_url, settings.canvas_token)
+            canvas_assignments = canvas_api.get_all_assignments()
+            filtered_canvas_assignments = filter_canvas_assignments(
+                canvas_assignments, settings.weeks_delta
             )
 
-            due_assignments.extend(filtered_gradescope_assignments)
-        finally:
-            gradescope_automation.close_browser()
+            due_assignments.extend(filtered_canvas_assignments)
+        else:
+            print("Canvas is enabled but credentials are not configured.")
+
+    # Handle assignments from Gradescope if enabled and configured.
+    if settings.gradescope_enabled:
+        if settings.gradescope_email and settings.gradescope_password:
+            gradescope_automation = GradescopeAutomation(
+                settings.gradescope_email, settings.gradescope_password
+            )
+
+            try:
+                gradescope_assignments = gradescope_automation.get_all_assignments()
+                filtered_gradescope_assignments = filter_gradescope_assignments(
+                    gradescope_assignments, settings.weeks_delta
+                )
+
+                due_assignments.extend(filtered_gradescope_assignments)
+            finally:
+                gradescope_automation.close_browser()
+        else:
+            print("Gradescope is enabled but credentials are not configured.")
 
     return due_assignments
 
@@ -162,7 +160,8 @@ async def refresh_assignments() -> None:
         except Exception as exc:
             print(f"Refresh failed: {exc}")
 
-        await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
+        settings = SettingsManager.get()
+        await asyncio.sleep(settings.refresh_interval)
 
 
 @api.get("/status")
@@ -191,20 +190,24 @@ def get_config() -> dict[str, object]:
         dict: Non-sensitive configuration values and the
             enabled/configured status of supported integrations.
     """
+    settings = SettingsManager.get()
+
     return {
         "canvas": {
-            "enabled": CANVAS_ENABLED,
-            "configured": bool(CANVAS_GRAPHQL_URL and CANVAS_TOKEN),
+            "enabled": settings.canvas_enabled,
+            "configured": bool(settings.canvas_graphql_url and settings.canvas_token),
         },
         "gradescope": {
-            "enabled": GRADESCOPE_ENABLED,
-            "configured": bool(GRADESCOPE_EMAIL and GRADESCOPE_PASSWORD),
+            "enabled": settings.gradescope_enabled,
+            "configured": bool(
+                settings.gradescope_email and settings.gradescope_password
+            ),
         },
-        "refresh_interval": REFRESH_INTERVAL_SECONDS,
-        "weeks_delta": WEEKS_DELTA,
+        "refresh_interval": settings.refresh_interval,
+        "weeks_delta": settings.weeks_delta,
         "ngrok": {
-            "enabled": NGROK_ENABLED,
-            "configured": bool(NGROK_DOMAIN and NGROK_AUTHTOKEN),
+            "enabled": settings.ngrok_enabled,
+            "configured": bool(settings.ngrok_domain and settings.ngrok_authtoken),
         },
     }
 
