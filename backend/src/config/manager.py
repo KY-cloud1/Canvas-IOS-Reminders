@@ -73,12 +73,12 @@ class SettingsManager:
         Database.initialize()
 
         Database.set("canvas_enabled", str(settings.canvas_enabled).lower())
-        Database.set("canvas_graphql_url", settings.canvas_graphql_url)
+        Database.set("canvas_graphql_url", settings.canvas_graphql_url or "")
         Database.set("gradescope_enabled", str(settings.gradescope_enabled).lower())
         Database.set("refresh_interval", str(settings.refresh_interval))
         Database.set("weeks_delta", str(settings.weeks_delta))
         Database.set("ngrok_enabled", str(settings.ngrok_enabled).lower())
-        Database.set("ngrok_domain", settings.ngrok_domain)
+        Database.set("ngrok_domain", settings.ngrok_domain or "")
 
         cls._save_secret("canvas_token", settings.canvas_token)
         cls._save_secret("gradescope_email", settings.gradescope_email)

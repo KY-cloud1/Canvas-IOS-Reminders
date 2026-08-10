@@ -24,7 +24,7 @@ class Settings:
     weeks_delta: int
 
     canvas_enabled: bool
-    canvas_graphql_url: str
+    canvas_graphql_url: str | None
     canvas_token: str | None
 
     gradescope_enabled: bool
@@ -32,5 +32,5 @@ class Settings:
     gradescope_password: str | None
 
     ngrok_enabled: bool
-    ngrok_domain: str
+    ngrok_domain: str | None
     ngrok_authtoken: str | None
