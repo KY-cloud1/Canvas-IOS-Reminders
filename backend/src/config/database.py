@@ -15,11 +15,11 @@ DB_PATH = Path(__file__).resolve().parent / "settings.db"
 
 # Default settings used upon initialization.
 DEFAULT_SETTINGS = {
+    "refresh_interval": "3600",  # 3600 seconds = 60 minutes
+    "weeks_delta": "10",  # Standard academic quarter
     "canvas_enabled": "false",
     "canvas_graphql_url": "",
     "gradescope_enabled": "false",
-    "refresh_interval": "3600",  # 3600 seconds = 60 minutes
-    "weeks_delta": "10",  # Standard academic quarter
     "ngrok_enabled": "false",
     "ngrok_domain": "",
 }
