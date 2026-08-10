@@ -12,11 +12,14 @@ from datetime import UTC, datetime
 
 import ngrok
 import uvicorn
-from canvas_client import CanvasApi, filter_canvas_assignments
+from canvas.client import CanvasApi, filter_canvas_assignments
 from config import SettingsManager
 from fastapi import APIRouter, BackgroundTasks, FastAPI
-from gradescope_client import GradescopeAutomation, filter_gradescope_assignments
-from settings import SettingsUpdate
+from gradescope.client import (
+    GradescopeAutomation,
+    filter_gradescope_assignments,
+)
+from schemas.settings import SettingsUpdate
 
 # The port that the local server will run on.
 PORT = 8081

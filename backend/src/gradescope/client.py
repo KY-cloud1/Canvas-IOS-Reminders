@@ -1,4 +1,4 @@
-# gradescope_client.py
+# client.py
 
 """
 This module contains a class that gets upcoming assignments from
