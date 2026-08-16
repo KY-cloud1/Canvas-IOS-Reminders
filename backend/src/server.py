@@ -184,37 +184,6 @@ def get_status() -> dict[str, object]:
     }
 
 
-@api.get("/config")
-def get_config() -> dict[str, object]:
-    """
-    Returns the server's current runtime configuration.
-
-    Returns:
-        dict: Non-sensitive configuration values and the
-            enabled/configured status of supported integrations.
-    """
-    settings = SettingsManager.get()
-
-    return {
-        "canvas": {
-            "enabled": settings.canvas_enabled,
-            "configured": bool(settings.canvas_graphql_url and settings.canvas_token),
-        },
-        "gradescope": {
-            "enabled": settings.gradescope_enabled,
-            "configured": bool(
-                settings.gradescope_email and settings.gradescope_password
-            ),
-        },
-        "refresh_interval": settings.refresh_interval,
-        "weeks_delta": settings.weeks_delta,
-        "ngrok": {
-            "enabled": settings.ngrok_enabled,
-            "configured": bool(settings.ngrok_domain and settings.ngrok_authtoken),
-        },
-    }
-
-
 @api.get("/settings")
 def get_settings() -> dict[str, object]:
     """

@@ -1,4 +1,4 @@
-import type { ServerConfig, ServerRefreshResponse, ServerSettings, ServerSettingsUpdate, ServerStatus } from "../types/server";
+import type { ServerRefreshResponse, ServerSettings, ServerSettingsUpdate, ServerStatus } from "../types/server";
 
 const API = "/api";
 
@@ -14,23 +14,6 @@ export async function getStatus(): Promise<ServerStatus> {
 
     if (!response.ok) {
         throw new Error("Failed to fetch status from server.");
-    }
-
-    return response.json();
-}
-
-/**
- * Retrieves the current server configuration.
- *
- * @returns A promise that resolves to the server configuration.
- *
- * @throws {Error} If the API request fails or returns a non-success response.
- */
-export async function getConfig(): Promise<ServerConfig> {
-    const response = await fetch(`${API}/config`);
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch config from server.");
     }
 
     return response.json();
