@@ -55,12 +55,15 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
 
     const [canvasEnabled, setCanvasEnabled] = useState(settings.canvas.enabled);
     const [canvasGraphqlUrl, setCanvasGraphqlUrl] = useState(settings.canvas.graphql_url);
+    const [canvasTokenSet, setCanvasTokenSet] = useState("")
 
     const [gradescopeEnabled, setGradescopeEnabled] = useState(settings.gradescope.enabled);
     const [gradescopeEmail, setGradescopeEmail] = useState(settings.gradescope.email);
+    const [gradescopePasswordSet, setGradescopePasswordSet] = useState("")
 
     const [ngrokEnabled, setNgrokEnabled] = useState(settings.ngrok.enabled);
     const [ngrokDomain, setNgrokDomain] = useState(settings.ngrok.domain);
+    const [ngrokTokenSet, setNgrokTokenSet] = useState("")
 
     return (
         <form>
@@ -103,8 +106,15 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Authtoken Configured:{" "}
-                {settings.canvas.token_configured ? "Yes" : "No"}
+                Authtoken:{" "}
+                <input
+                    type="password"
+                    value={canvasTokenSet}
+                    placeholder={
+                        settings.canvas.token_configured ? "Configured" : "Not configured"
+                    }
+                    onChange={(e) => setCanvasTokenSet(e.target.value)}
+                />
             </label>
 
             <h3>Gradescope:</h3>
@@ -127,8 +137,15 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Password Configured:{" "}
-                {settings.gradescope.password_configured ? "Yes" : "No"}
+                Password:{" "}
+                <input
+                    type="password"
+                    value={gradescopePasswordSet}
+                    placeholder={
+                        settings.gradescope.password_configured ? "Configured" : "Not configured"
+                    }
+                    onChange={(e) => setGradescopePasswordSet(e.target.value)}
+                />
             </label>
 
             <h3>ngrok:</h3>
@@ -151,8 +168,15 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Authtoken Configured:{" "}
-                {settings.ngrok.authtoken_configured ? "Yes" : "No"}
+                Authtoken:{" "}
+                <input
+                    type="password"
+                    value={ngrokTokenSet}
+                    placeholder={
+                        settings.ngrok.authtoken_configured ? "Configured" : "Not configured"
+                    }
+                    onChange={(e) => setNgrokTokenSet(e.target.value)}
+                />
             </label>
         </form>
     );
