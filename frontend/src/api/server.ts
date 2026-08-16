@@ -1,4 +1,4 @@
-import type { ServerConfig, ServerStatus, ServerRefreshResponse } from "../types/server";
+import type { ServerConfig, ServerRefreshResponse, ServerSettings, ServerSettingsUpdate, ServerStatus } from "../types/server";
 
 const API = "/api";
 
@@ -34,6 +34,45 @@ export async function getConfig(): Promise<ServerConfig> {
     }
 
     return response.json();
+}
+
+/**
+ * Retrieves the current server settings.
+ *
+ * @returns A promise that resolves to the server settings.
+ *
+ * @throws {Error} If the API request fails or returns a non-success response.
+ */
+export async function getSettings(): Promise<ServerSettings> {
+    const response = await fetch(`${API}/settings`);
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch settings from server.");
+    }
+
+    return response.json();
+}
+
+/**
+ * Updates the current server settings.
+ *
+ * @param settings - The settings to apply to the server.
+ * @returns A promise that resolves when the settings have been successfully updated.
+ *
+ * @throws {Error} If the API request fails or returns a non-success response.
+ */
+export async function updateSettings(settings: ServerSettingsUpdate,): Promise<void> {
+    const response = await fetch(`${API}/settings`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settings)
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update server settings.")
+    }
 }
 
 /**

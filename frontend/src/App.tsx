@@ -1,5 +1,6 @@
 import './App.css'
 import { ServerConfigPanel } from './components/ServerConfigPanel/ServerConfigPanel'
+import { ServerSettingsPanel } from './components/ServerSettingsPanel/ServerSettingsPanel'
 import { ServerStatusPanel } from './components/ServerStatusPanel/ServerStatusPanel'
 import { ServerRefreshButton } from './components/SeverRefreshButton/ServerRefreshButton'
 
@@ -11,6 +12,7 @@ function App() {
       <div className='panels'>
         <ServerStatusPanel />
         <ServerConfigPanel />
+        <ServerSettingsPanel />
         <ServerRefreshButton />
       </div>
     </main>
