@@ -187,7 +187,7 @@ def get_status() -> dict[str, object]:
             refresh.
     """
     return {
-        "status": "healthy" if app.state.last_refresh_error is None else "degraded",
+        "status": "Healthy" if app.state.last_refresh_error is None else "Degraded",
         "cached_assignments": len(app.state.cached_assignments),
         "last_refresh": app.state.last_refresh,
         "last_refresh_error": app.state.last_refresh_error,
