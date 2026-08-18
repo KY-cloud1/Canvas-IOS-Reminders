@@ -49,24 +49,57 @@ interface SettingsFormProps {
     isSaving: boolean;
 }
 
+/**
+ * Renders the editable server settings form.
+ *
+ * Initializes the form with the current server settings and submits
+ * updated values through the provided `onSubmit` callback.
+ */
 function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
     const [refreshInterval, setRefreshInterval] = useState(settings.refresh_interval);
     const [weeksDelta, setWeeksDelta] = useState(settings.weeks_delta);
 
     const [canvasEnabled, setCanvasEnabled] = useState(settings.canvas.enabled);
     const [canvasGraphqlUrl, setCanvasGraphqlUrl] = useState(settings.canvas.graphql_url);
-    const [canvasTokenSet, setCanvasTokenSet] = useState("")
+    const [canvasToken, setCanvasToken] = useState("")
 
     const [gradescopeEnabled, setGradescopeEnabled] = useState(settings.gradescope.enabled);
     const [gradescopeEmail, setGradescopeEmail] = useState(settings.gradescope.email);
-    const [gradescopePasswordSet, setGradescopePasswordSet] = useState("")
+    const [gradescopePassword, setGradescopePassword] = useState("")
 
     const [ngrokEnabled, setNgrokEnabled] = useState(settings.ngrok.enabled);
     const [ngrokDomain, setNgrokDomain] = useState(settings.ngrok.domain);
-    const [ngrokTokenSet, setNgrokTokenSet] = useState("")
+    const [ngrokToken, setNgrokToken] = useState("")
+
+    /**
+     * Prevents the browser's default form submission and sends the current
+     * form values to the parent component for persistence.
+     */
+    function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        const newSettings: ServerSettingsUpdate = {
+            refresh_interval: refreshInterval,
+            weeks_delta: weeksDelta,
+
+            canvas_enabled: canvasEnabled,
+            canvas_graphql_url: canvasGraphqlUrl,
+            canvas_token: canvasToken || undefined,
+
+            gradescope_enabled: gradescopeEnabled,
+            gradescope_email: gradescopeEmail,
+            gradescope_password: gradescopePassword || undefined,
+
+            ngrok_enabled: ngrokEnabled,
+            ngrok_domain: ngrokDomain,
+            ngrok_authtoken: ngrokToken || undefined,
+        };
+
+        void onSubmit(newSettings);
+    }
 
     return (
-        <form>
+        <form onSubmit={handleSubmit}>
             <h3>General:</h3>
             <label>
                 Refresh Interval:{" "}
@@ -109,11 +142,11 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
                 Authtoken:{" "}
                 <input
                     type="password"
-                    value={canvasTokenSet}
+                    value={canvasToken}
                     placeholder={
                         settings.canvas.token_configured ? "Configured" : "Not configured"
                     }
-                    onChange={(e) => setCanvasTokenSet(e.target.value)}
+                    onChange={(e) => setCanvasToken(e.target.value)}
                 />
             </label>
 
@@ -140,11 +173,11 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
                 Password:{" "}
                 <input
                     type="password"
-                    value={gradescopePasswordSet}
+                    value={gradescopePassword}
                     placeholder={
                         settings.gradescope.password_configured ? "Configured" : "Not configured"
                     }
-                    onChange={(e) => setGradescopePasswordSet(e.target.value)}
+                    onChange={(e) => setGradescopePassword(e.target.value)}
                 />
             </label>
 
@@ -171,13 +204,19 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
                 Authtoken:{" "}
                 <input
                     type="password"
-                    value={ngrokTokenSet}
+                    value={ngrokToken}
                     placeholder={
                         settings.ngrok.authtoken_configured ? "Configured" : "Not configured"
                     }
-                    onChange={(e) => setNgrokTokenSet(e.target.value)}
+                    onChange={(e) => setNgrokToken(e.target.value)}
                 />
             </label>
+            <br />
+            <br />
+
+            <button type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Settings"}
+            </button>
         </form>
     );
 }
