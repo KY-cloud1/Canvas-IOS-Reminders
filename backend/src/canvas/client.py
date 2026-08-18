@@ -95,10 +95,10 @@ class CanvasApi:
                 return assignment_data
 
         except urllib.error.HTTPError as e:
-            raise ConnectionError(f"Canvas API HTTP error: {e}")
+            raise ConnectionError(f"Canvas API {e}")
 
         except urllib.error.URLError as e:
-            raise ConnectionError(f"Failed to connect to Canvas API: {e}")
+            raise ConnectionError(f"Canvas connection {e}")
 
 
 def filter_canvas_assignments(assignments: dict, weeks_delta: int) -> list[dict]:
