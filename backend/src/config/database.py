@@ -29,91 +29,82 @@ class Database:
     """
     Manage access to the application's SQLite settings database.
 
-    This class provides a simple interface for initializing the database,
-    storing key-value pairs, retrieving stored values, and closing the
-    database connection. The connection is managed as a singleton and shared
-    across all class methods.
+    This class provides a simple interface for initializing the
+    database, storing key-value pairs, retrieving stored values,
+    updating, and deleting configuration values. Each database
+    operation uses its own SQLite connection.
     """
 
-    _conn: sqlite3.Connection | None = None
+    @classmethod
+    def _connect(cls) -> sqlite3.Connection:
+        """
+        Open a new SQLite database connection.
+
+        Returns:
+            A new SQLite connection configured to return rows by column
+            name.
+        """
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
     @classmethod
     def initialize(cls) -> None:
         """
-        Initialize the database connection.
+        Initialize the settings database.
 
-        Creates a connection to the SQLite database if one is not already
-        open, creates the settings table if necessary, and inserts any
-        missing default settings from DEFAULT_SETTINGS.
-
-        This method is safe to call multiple times. If the database is
-        already initialized, it returns immediately. Existing settings are
-        not overwritten.
+        Creates the settings table if necessary and inserts any missing
+        default settings from DEFAULT_SETTINGS. The database connection
+        is closed after initialization.
         """
-        if cls._conn is not None:
-            return
+        conn = cls._connect()
 
-        cls._conn = sqlite3.connect(DB_PATH)
-        cls._conn.row_factory = sqlite3.Row
-
-        cls._conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            );
-            """
-        )
-
-        for key, value in DEFAULT_SETTINGS.items():
-            cls._conn.execute(
+        try:
+            conn.execute(
                 """
-                INSERT OR IGNORE INTO settings (key, value)
-                VALUES (?, ?)
-                """,
-                (key, value),
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
+                """
             )
 
-        cls._conn.commit()
+            for key, value in DEFAULT_SETTINGS.items():
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO settings (key, value)
+                    VALUES (?, ?)
+                    """,
+                    (key, value),
+                )
 
-    @classmethod
-    def close(cls) -> None:
-        """
-        Close the active database connection.
-
-        If no connection is currently open, this method does nothing. After
-        closing the connection, the internal connection reference is reset.
-        """
-        if cls._conn is None:
-            return
-
-        cls._conn.close()
-        cls._conn = None
+            conn.commit()
+        finally:
+            conn.close()
 
     @classmethod
     def set(cls, key: str, value: str) -> None:
         """
         Store or update a configuration value.
 
-        If a setting with the specified key already exists, its value is
-        replaced. Otherwise, a new setting is created.
+        If a setting with the specified key already exists, its value
+        is replaced. Otherwise, a new setting is created.
 
         Args:
             key: The unique identifier for the setting.
             value: The value to associate with the key.
-
-        Raises:
-            RuntimeError: If the database has not been initialized.
         """
-        if cls._conn is None:
-            raise RuntimeError("Database has not been initialized.")
+        conn = cls._connect()
 
-        cls._conn.execute(
-            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-            (key, value),
-        )
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+                (key, value),
+            )
 
-        cls._conn.commit()
+            conn.commit()
+        finally:
+            conn.close()
 
     @classmethod
     def get(cls, key: str) -> str:
@@ -127,21 +118,22 @@ class Database:
             The stored value associated with the key.
 
         Raises:
-            RuntimeError: If the database has not been initialized.
             KeyError: If no setting exists for the specified key.
         """
-        if cls._conn is None:
-            raise RuntimeError("Database has not been initialized.")
+        conn = cls._connect()
 
-        row = cls._conn.execute(
-            "SELECT value FROM settings WHERE key = ?",
-            (key,),
-        ).fetchone()
+        try:
+            row = conn.execute(
+                "SELECT value FROM settings WHERE key = ?",
+                (key,),
+            ).fetchone()
 
-        if row is None:
-            raise KeyError(f"Setting {key!r} does not exist.")
+            if row is None:
+                raise KeyError(f"Setting {key!r} does not exist.")
 
-        return row["value"]
+            return row["value"]
+        finally:
+            conn.close()
 
     @classmethod
     def delete(cls, key: str) -> None:
@@ -152,19 +144,18 @@ class Database:
 
         Args:
             key: The unique identifier for the setting to remove.
-
-        Raises:
-            RuntimeError: If the database has not been initialized.
         """
-        if cls._conn is None:
-            raise RuntimeError("Database has not been initialized.")
+        conn = cls._connect()
 
-        cls._conn.execute(
-            "DELETE FROM settings WHERE key = ?",
-            (key,),
-        )
+        try:
+            conn.execute(
+                "DELETE FROM settings WHERE key = ?",
+                (key,),
+            )
 
-        cls._conn.commit()
+            conn.commit()
+        finally:
+            conn.close()
 
     @classmethod
     def exists(cls, key: str) -> bool:
@@ -177,19 +168,18 @@ class Database:
         Returns:
             True if the specified key exists in the database, otherwise
             False.
-
-        Raises:
-            RuntimeError: If the database has not been initialized.
         """
-        if cls._conn is None:
-            raise RuntimeError("Database has not been initialized.")
+        conn = cls._connect()
 
-        row = cls._conn.execute(
-            "SELECT EXISTS(SELECT 1 FROM settings WHERE key = ?)",
-            (key,),
-        ).fetchone()
+        try:
+            row = conn.execute(
+                "SELECT EXISTS(SELECT 1 FROM settings WHERE key = ?)",
+                (key,),
+            ).fetchone()
 
-        return bool(row[0])
+            return bool(row[0])
+        finally:
+            conn.close()
 
     @classmethod
     def get_all(cls) -> dict[str, str]:
@@ -197,17 +187,17 @@ class Database:
         Retrieve all stored configuration values.
 
         Returns:
-            A dictionary mapping each setting key to its corresponding value.
-            If no settings are stored, an empty dictionary is returned.
-
-        Raises:
-            RuntimeError: If the database has not been initialized.
+            A dictionary mapping each setting key to its corresponding
+            value. If no settings are stored, an empty dictionary is
+            returned.
         """
-        if cls._conn is None:
-            raise RuntimeError("Database has not been initialized.")
+        conn = cls._connect()
 
-        rows = cls._conn.execute(
-            "SELECT key, value FROM settings",
-        ).fetchall()
+        try:
+            rows = conn.execute(
+                "SELECT key, value FROM settings",
+            ).fetchall()
 
-        return {row["key"]: row["value"] for row in rows}
+            return {row["key"]: row["value"] for row in rows}
+        finally:
+            conn.close()
