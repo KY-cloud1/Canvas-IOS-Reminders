@@ -44,16 +44,20 @@ async def lifespan(app: FastAPI):
     await refresh_once()  # Fill cache once before continuing startup.
     task = asyncio.create_task(refresh_assignments())
 
+    listener = None
     if settings.ngrok_enabled:
-        if settings.ngrok_domain and settings.ngrok_authtoken:
-            listener = ngrok.forward(
-                PORT, authtoken=settings.ngrok_authtoken, domain=settings.ngrok_domain
-            )
-        else:
-            print("ngrok is enabled but credentials are not configured.")
-            listener = None
-    else:
-        listener = None
+        try:
+            if settings.ngrok_domain and settings.ngrok_authtoken:
+                listener = ngrok.forward(
+                    PORT,
+                    authtoken=settings.ngrok_authtoken,
+                    domain=settings.ngrok_domain,
+                )
+
+            else:
+                print("ngrok is enabled but credentials are not configured.")
+        except Exception as e:  # noqa: BLE001
+            print(f"{e}")
 
     # Server is live
     yield
@@ -93,38 +97,55 @@ def fetch_assignments() -> list[dict]:
     settings = SettingsManager.get()
 
     due_assignments = []
+    errors = []
 
     # Handle assignments from Canvas if enabled and configured.
     if settings.canvas_enabled:
-        if settings.canvas_graphql_url and settings.canvas_token:
-            canvas_api = CanvasApi(settings.canvas_graphql_url, settings.canvas_token)
-            canvas_assignments = canvas_api.get_all_assignments()
-            filtered_canvas_assignments = filter_canvas_assignments(
-                canvas_assignments, settings.weeks_delta
-            )
+        try:
+            if settings.canvas_graphql_url and settings.canvas_token:
+                canvas_api = CanvasApi(
+                    settings.canvas_graphql_url, settings.canvas_token
+                )
+                canvas_assignments = canvas_api.get_all_assignments()
+                filtered_canvas_assignments = filter_canvas_assignments(
+                    canvas_assignments, settings.weeks_delta
+                )
 
-            due_assignments.extend(filtered_canvas_assignments)
-        else:
-            print("Canvas is enabled but credentials are not configured.")
+                due_assignments.extend(filtered_canvas_assignments)
+
+            else:
+                errors.append("Canvas is enabled but credentials are not configured.")
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{e}")
+            print(f"{e}")
 
     # Handle assignments from Gradescope if enabled and configured.
     if settings.gradescope_enabled:
-        if settings.gradescope_email and settings.gradescope_password:
-            gradescope_automation = GradescopeAutomation(
-                settings.gradescope_email, settings.gradescope_password
-            )
-
-            try:
-                gradescope_assignments = gradescope_automation.get_all_assignments()
-                filtered_gradescope_assignments = filter_gradescope_assignments(
-                    gradescope_assignments, settings.weeks_delta
+        try:
+            if settings.gradescope_email and settings.gradescope_password:
+                gradescope_automation = GradescopeAutomation(
+                    settings.gradescope_email, settings.gradescope_password
                 )
 
-                due_assignments.extend(filtered_gradescope_assignments)
-            finally:
-                gradescope_automation.close_browser()
-        else:
-            print("Gradescope is enabled but credentials are not configured.")
+                try:
+                    gradescope_assignments = gradescope_automation.get_all_assignments()
+                    filtered_gradescope_assignments = filter_gradescope_assignments(
+                        gradescope_assignments, settings.weeks_delta
+                    )
+
+                    due_assignments.extend(filtered_gradescope_assignments)
+
+                finally:
+                    gradescope_automation.close_browser()
+            else:
+                errors.append(
+                    "Gradescope is enabled but credentials are not configured."
+                )
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{e}")
+            print(f"{e}")
+
+    app.state.last_refresh_error = "\n".join(errors) if errors else None
 
     return due_assignments
 
@@ -134,17 +155,10 @@ async def refresh_once() -> None:
     Performs a single refresh of the cached assignment data.
 
     The function fetches the latest assignments from configured sources
-    and updates the application cache. On success, it records the
-    refresh timestamp and clears any previous refresh error. On
-    failure, it records the error and re-raises the exception.
+    and updates the application cache.
     """
-    try:
-        app.state.cached_assignments = await asyncio.to_thread(fetch_assignments)
-        app.state.last_refresh = datetime.now(UTC)
-        app.state.last_refresh_error = None
-    except Exception as exc:
-        app.state.last_refresh_error = str(exc)
-        raise
+    app.state.cached_assignments = await asyncio.to_thread(fetch_assignments)
+    app.state.last_refresh = datetime.now(UTC)
 
 
 async def refresh_assignments() -> None:
@@ -154,14 +168,10 @@ async def refresh_assignments() -> None:
 
     The function runs indefinitely while the application is active,
     repeatedly calling `refresh_once()` and waiting for the configured
-    interval between refreshes. Any refresh failures are logged, and
-    the loop continues after the sleep interval.
+    interval between refreshes.
     """
     while True:
-        try:
-            await refresh_once()
-        except Exception as exc:
-            print(f"Refresh failed: {exc}")
+        await refresh_once()
 
         settings = SettingsManager.get()
         await asyncio.sleep(settings.refresh_interval)
