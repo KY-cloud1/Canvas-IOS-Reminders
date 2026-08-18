@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSettings, updateSettings } from "../api/server";
+import { getSettings, refreshAssignments, updateSettings } from "../api/server";
 import type { ServerSettings, ServerSettingsUpdate } from "../types/server";
 
 /**
@@ -43,6 +43,7 @@ export function useServerSettings() {
         try {
             await updateSettings(newSettings);
             await loadSettings();
+            await refreshAssignments();
             setError(null);
         } catch {
             setError("Failed to update server settings.");
