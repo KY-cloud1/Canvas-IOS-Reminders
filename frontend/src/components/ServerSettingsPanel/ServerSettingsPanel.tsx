@@ -102,7 +102,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
         <form onSubmit={handleSubmit}>
             <h3>General:</h3>
             <label>
-                Refresh Interval:{" "}
+                <span>Refresh Interval:{" "}</span>
                 <input
                     type="number"
                     value={refreshInterval}
@@ -111,7 +111,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Weeks Delta:{" "}
+                <span>Weeks Delta:{" "}</span>
                 <input
                     type="number"
                     value={weeksDelta}
@@ -121,7 +121,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
 
             <h3>Canvas:</h3>
             <label>
-                Enabled:{" "}
+                <span>Enabled:{" "}</span>
                 <input
                     type="checkbox"
                     checked={canvasEnabled}
@@ -130,7 +130,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                GraphQL URL:{" "}
+                <span>GraphQL URL:{" "}</span>
                 <input
                     type="text"
                     value={canvasGraphqlUrl || ""}
@@ -139,7 +139,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Authtoken:{" "}
+                <span>Authtoken:{" "}</span>
                 <input
                     type="password"
                     value={canvasToken}
@@ -152,7 +152,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
 
             <h3>Gradescope:</h3>
             <label>
-                Enabled:{" "}
+                <span>Enabled:{" "}</span>
                 <input
                     type="checkbox"
                     checked={gradescopeEnabled}
@@ -161,7 +161,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Email:{" "}
+                <span>Email:{" "}</span>
                 <input
                     type="text"
                     value={gradescopeEmail || ""}
@@ -170,7 +170,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Password:{" "}
+                <span>Password:{" "}</span>
                 <input
                     type="password"
                     value={gradescopePassword}
@@ -183,7 +183,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
 
             <h3>ngrok:</h3>
             <label>
-                Enabled:{" "}
+                <span>Enabled:{" "}</span>
                 <input
                     type="checkbox"
                     checked={ngrokEnabled}
@@ -192,7 +192,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Domain:{" "}
+                <span>Domain:{" "}</span>
                 <input
                     type="text"
                     value={ngrokDomain || ""}
@@ -201,7 +201,7 @@ function SettingsForm({ settings, onSubmit, isSaving }: SettingsFormProps) {
             </label>
             <br />
             <label>
-                Authtoken:{" "}
+                <span>Authtoken:{" "}</span>
                 <input
                     type="password"
                     value={ngrokToken}
