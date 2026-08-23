@@ -19,6 +19,7 @@ export function ServerRefreshButton() {
         <div className={styles.refreshButton}>
             <div>
                 <h2 className={styles.centeredLine}>Refresh</h2>
+                <br />
                 <button onClick={handleRefresh} disabled={isRequestingRefresh}>
                     {isRequestingRefresh ? "Requesting Refresh..." : "Refresh Assignments"}
                 </button>
