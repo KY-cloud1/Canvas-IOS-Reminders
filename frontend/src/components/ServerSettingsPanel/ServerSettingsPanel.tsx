@@ -18,27 +18,29 @@ export function ServerSettingsPanel() {
         saveSettings,
     } = useServerSettings();
 
-    if (isLoading) {
-        return <div>Loading settings...</div>;
-    }
-
-    if (error) {
-        return <div>{error}</div>;
-    }
-
-    if (!serverSettings) {
-        return <div>No server settings available.</div>;
-    }
-
     return (
         <div className={styles.settingsCard}>
             <h2 className={styles.centeredLine}>Server Settings</h2>
 
-            <SettingsForm
-                settings={serverSettings}
-                onSubmit={saveSettings}
-                isSaving={isSaving}
-            />
+            {isLoading && (
+                <div>Loading server settings...</div>
+            )}
+
+            {error && (
+                <div>{error}</div>
+            )}
+
+            {!error && !serverSettings && (
+                <div>No server settings available.</div>
+            )}
+
+            {!isLoading && !error && serverSettings && (
+                <SettingsForm
+                    settings={serverSettings}
+                    onSubmit={saveSettings}
+                    isSaving={isSaving}
+                />
+            )}
         </div>
     );
 }

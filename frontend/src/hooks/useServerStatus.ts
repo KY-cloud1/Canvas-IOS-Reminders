@@ -21,8 +21,6 @@ export function useServerStatus() {
      * Retrieves the latest server status and updates the component state.
      */
     async function loadStatus() {
-        setIsLoading(true);
-
         try {
             const status = await getStatus();
             setServerStatus(status);

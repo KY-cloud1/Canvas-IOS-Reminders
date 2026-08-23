@@ -21,8 +21,6 @@ export function useServerSettings() {
      * Fetches the latest server settings and updates the hook state.
      */
     async function loadSettings() {
-        setIsLoading(true);
-
         try {
             const config = await getSettings();
             setServerSettings(config);
