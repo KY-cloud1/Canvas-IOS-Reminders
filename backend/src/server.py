@@ -6,6 +6,7 @@ as a JSON API using Uvicorn.
 """
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -14,12 +15,13 @@ import ngrok
 import uvicorn
 from canvas.client import CanvasApi, filter_canvas_assignments
 from config import SettingsManager
-from fastapi import APIRouter, BackgroundTasks, FastAPI
+from fastapi import APIRouter, BackgroundTasks, FastAPI, Request
 from gradescope.client import (
     GradescopeAutomation,
     filter_gradescope_assignments,
 )
 from schemas.settings import SettingsUpdate
+from sse_starlette import EventSourceResponse
 
 # The port that the local server will run on.
 PORT = 8081
@@ -80,6 +82,7 @@ api = APIRouter(prefix="/api")
 app.state.cached_assignments = []
 app.state.last_refresh = None
 app.state.last_refresh_error = None
+app.state.sse_subscribers = set()
 
 
 def fetch_assignments() -> list[dict]:
@@ -154,11 +157,14 @@ async def refresh_once() -> None:
     """
     Performs a single refresh of the cached assignment data.
 
-    The function fetches the latest assignments from configured sources
-    and updates the application cache.
+    The function fetches the latest assignments from configured
+    sources, updates the application cache and last refresh time, and
+    publishes the updated server status to connected SSE clients.
     """
     app.state.cached_assignments = await asyncio.to_thread(fetch_assignments)
     app.state.last_refresh = datetime.now(UTC)
+
+    await publish_server_status()
 
 
 async def refresh_assignments() -> None:
@@ -177,8 +183,7 @@ async def refresh_assignments() -> None:
         await asyncio.sleep(settings.refresh_interval)
 
 
-@api.get("/status")
-def get_status() -> dict[str, object]:
+def get_server_status() -> dict[str, object]:
     """
     Returns the current health status of the server.
 
@@ -192,6 +197,43 @@ def get_status() -> dict[str, object]:
         "last_refresh": app.state.last_refresh,
         "last_refresh_error": app.state.last_refresh_error,
     }
+
+
+async def publish_server_status() -> None:
+    """
+    Publishes the current server status to all connected SSE
+    subscribers.
+
+    The function serializes the server status and adds it to each
+    subscriber's queue, replacing any older pending event.
+    """
+    # Create SSE event containing the current server status.
+    event = {
+        "event": "server_status",
+        "data": json.dumps(
+            get_server_status(),
+            default=str,
+        ),
+    }
+
+    # Send event to all connected subscribers, replacing any older
+    # pending events.
+    for queue in list(app.state.sse_subscribers):
+        if queue.full():
+            queue.get_nowait()
+
+        queue.put_nowait(event)
+
+
+@api.get("/status")
+def get_status() -> dict[str, object]:
+    """
+    Returns the server health status as an API response.
+
+    Returns:
+        dict: The current server health status.
+    """
+    return get_server_status()
 
 
 @api.get("/settings")
@@ -274,6 +316,58 @@ def manual_refresh(background_tasks: BackgroundTasks) -> dict[str, str]:
     background_tasks.add_task(refresh_once)
 
     return {"status": "refresh_started"}
+
+
+@api.get("/events")
+async def server_events(request: Request) -> EventSourceResponse:
+    """
+    Streams server status updates to connected SSE clients.
+
+    The function creates a queue for the client, registers it as an
+    active subscriber, and returns an SSE response that sends the
+    current server status followed by future updates.
+
+    Args:
+        request: The incoming FastAPI request.
+
+    Returns:
+        EventSourceResponse: An SSE response that streams server status
+            updates to the connected client.
+    """
+    queue: asyncio.Queue = asyncio.Queue(maxsize=1)
+    app.state.sse_subscribers.add(queue)
+
+    async def event_generator():
+        """
+        Generates server status events for the connected SSE client.
+
+        The generator immediately sends the current server status and
+        then waits for new events until the client disconnects. The
+        client's queue is removed from the active subscribers when the
+        connection closes.
+        """
+        try:
+            # Immediately send the current state.
+            yield {
+                "event": "server_status",
+                "data": json.dumps(
+                    get_server_status(),
+                    default=str,
+                ),
+            }
+
+            while True:
+                if await request.is_disconnected():
+                    break
+
+                yield await queue.get()
+        finally:
+            app.state.sse_subscribers.discard(queue)
+
+    return EventSourceResponse(
+        event_generator(),
+        ping=30,  # 30 second SSE heartbeat.
+    )
 
 
 app.include_router(api)

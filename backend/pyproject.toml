@@ -1,18 +1,12 @@
 [project]
-name = "your-project"
+name = "AssignmentBridge"
 version = "0.1.0"
 dependencies = [
     "fastapi",
-    "uvicorn",
-    "python-dotenv",
     "keyring",
-]
-
-[project.optional-dependencies]
-gradescope = [
-    "playwright>=1.40.0"
-]
-
-ngrok = [
-    "ngrok>=1.7.0"
+    "ngrok>=1.7.0",
+    "playwright>=1.40.0",
+    "python-dotenv",
+    "sse-starlette",
+    "uvicorn",
 ]
