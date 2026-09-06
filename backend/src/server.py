@@ -157,14 +157,21 @@ async def refresh_once() -> None:
     """
     Performs a single refresh of the cached assignment data.
 
-    The function fetches the latest assignments from configured
-    sources, updates the application cache and last refresh time, and
-    publishes the updated server status to connected SSE clients.
+    The function marks the server as refreshing, publishes the updated
+    server status to connected SSE clients, fetches the latest
+    assignments from configured sources, updates the application cache
+    and last refresh time, and publishes the completed refresh status.
     """
-    app.state.cached_assignments = await asyncio.to_thread(fetch_assignments)
-    app.state.last_refresh = datetime.now(UTC)
-
+    app.state.refreshing = True
     await publish_server_status()
+
+    try:
+        app.state.cached_assignments = await asyncio.to_thread(fetch_assignments)
+        app.state.last_refresh = datetime.now(UTC)
+
+    finally:
+        app.state.refreshing = False
+        await publish_server_status()
 
 
 async def refresh_assignments() -> None:
@@ -196,6 +203,7 @@ def get_server_status() -> dict[str, object]:
         "cached_assignments": len(app.state.cached_assignments),
         "last_refresh": app.state.last_refresh,
         "last_refresh_error": app.state.last_refresh_error,
+        "refreshing": app.state.refreshing,
     }
 
 
