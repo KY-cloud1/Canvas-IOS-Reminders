@@ -1,24 +1,24 @@
-import { useServerStatus } from "../../hooks/useServerStatus";
+import { useServer } from "../../context/ServerContext";
 import styles from "./ServerStatusPanel.module.css";
 
 /**
  * Renders the current backend server status.
  *
- * Displays loading and error states while the server status is being
- * retrieved and renders the current status information when available.
+ * Displays a loading state while waiting for the initial server status,
+ * an error state if a server status update cannot be processed, and the
+ * current server status information when available.
  */
 export function ServerStatusPanel() {
     const {
         serverStatus,
-        isLoading,
         error,
-    } = useServerStatus();
+    } = useServer();
 
     return (
         <div className={styles.statusCard}>
             <h2 className={styles.centeredLine}>Server Status</h2>
 
-            {isLoading && (
+            {!serverStatus && !error && (
                 <div>Loading server status...</div>
             )}
 
@@ -26,11 +26,7 @@ export function ServerStatusPanel() {
                 <div>{error}</div>
             )}
 
-            {!error && !serverStatus && (
-                <div>No server status available.</div>
-            )}
-
-            {!isLoading && !error && serverStatus && (
+            {!error && serverStatus && (
                 <>
                     <p><span className={styles.label}>Status:</span> {serverStatus.status}</p>
                     <p><span className={styles.label}>Number of Cached Assignments:</span> {serverStatus.cached_assignments}</p>
