@@ -1,27 +1,32 @@
-import { useState } from "react";
 import { refreshAssignments } from "../../api/server";
+import { useServer } from "../../context/ServerContext";
 import styles from "./ServerRefreshButton.module.css";
 
+/** 
+ * Renders a button for manually refreshing server assignments. 
+ * 
+ * Uses the shared server status to disable the button while a refresh
+ * is in progress. The button is automatically re-enabled when the 
+ * backend reports that the refresh has completed. 
+ * 
+ * @returns The server refresh button component. 
+ */
 export function ServerRefreshButton() {
-    const [isRequestingRefresh, setIsRequestingRefresh] = useState(false);
+    const { serverStatus } = useServer();
+
+    const isRefreshing = serverStatus?.refreshing == true;
 
     async function handleRefresh() {
-        setIsRequestingRefresh(true);
-
-        try {
-            await refreshAssignments();
-        } finally {
-            setIsRequestingRefresh(false);
-        }
+        await refreshAssignments();
     }
 
     return (
         <div className={styles.refreshButton}>
             <div>
-                <h2 className={styles.centeredLine}>Refresh</h2>
+                <h2>Refresh Server</h2>
                 <br />
-                <button onClick={handleRefresh} disabled={isRequestingRefresh}>
-                    {isRequestingRefresh ? "Requesting Refresh..." : "Refresh Assignments"}
+                <button onClick={handleRefresh} disabled={isRefreshing}>
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
                 </button>
             </div>
         </div>

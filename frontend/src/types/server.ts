@@ -3,6 +3,7 @@ export interface ServerStatus {
     cached_assignments: number;
     last_refresh: string | null;
     last_refresh_error: string | null;
+    refreshing: boolean;
 }
 
 export interface ServerSettings {
